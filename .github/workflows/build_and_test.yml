@@ -17,11 +17,20 @@ jobs:
       IMAGE_NAME: "examsys-docker:test"
       TESTPATH: './tests/fixtures'
     runs-on: ubuntu-latest
+
+    # Do a build of each configuration.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - conf: rogo.ini
+          - conf: rogo-nodebug.ini
+
     steps:
       - uses: actions/checkout@v4
       - name: Build and test the Docker image
         run:
-          docker build . --file Dockerfile --tag $IMAGE_NAME
+          docker build --build-arg APACHE_CONF=${{ matrix.conf }} . --file Dockerfile --tag $IMAGE_NAME
       - name: Start the image
         run:
           docker run --name examsystest -d -p 8000:80 -v $TESTPATH:/var/www/html $IMAGE_NAME
@@ -46,24 +55,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: Lint Docerfile
         id: hadolint
-        uses: hadolint/hadolint-action@v3.1.0
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: Dockerfile
-      - name: Update Pull Request
-        uses: actions/github-script@v6
-        if: github.event_name == 'pull_request'
-        with:
-          script: |
-            const output = `
-            #### Hadolint: \`${{ steps.hadolint.outcome }}\`
-            \`\`\`
-            ${process.env.HADOLINT_RESULTS}
-            \`\`\`
-            `;
-            
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
