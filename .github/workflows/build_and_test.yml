@@ -1,0 +1,60 @@
+name: Build and Test
+# Ensures that the image meets all the linting rules
+# Also that it builds and runs correctly
+
+on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - develop
+      - '[0-9]+.[0-9]+'
+
+jobs:
+  build:
+    env:
+      IMAGE_NAME: "examsys-docker:test"
+      TESTPATH: './tests/fixtures'
+    runs-on: ubuntu-latest
+
+    # Do a build of each configuration.
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - conf: rogo.ini
+          - conf: rogo-nodebug.ini
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build and test the Docker image
+        run:
+          docker build --build-arg APACHE_CONF=${{ matrix.conf }} . --file Dockerfile --tag $IMAGE_NAME
+      - name: Start the image
+        run:
+          docker run --name examsystest -d -p 8000:80 -v $TESTPATH:/var/www/html $IMAGE_NAME
+      - name: Command line accessible
+        run:
+          docker exec examsystest php /var/www/html/test.php
+      - name: Web line accessible
+        run:
+          curl --fail http://127.0.0.1:8000/test.php
+      - name: NPM installed
+        run:
+          docker exec examsystest npm -v
+      - name: Grunt installed
+        run:
+          docker exec examsystest grunt --version
+      - name: Stop docker image
+        run:
+          docker rm -f examsystest
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Lint Docerfile
+        id: hadolint
+        uses: hadolint/hadolint-action@v3.5.0
+        with:
+          dockerfile: Dockerfile

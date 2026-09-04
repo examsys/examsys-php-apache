@@ -4,19 +4,24 @@ A PHP environment configured for ExamSys development.
 
 ## Versions
 
-| PHP Version | Tags |
-|-------------|------|
-| PHP 8.2     | 8.2  |
-| PHP 8.1     | 8.1  |
-| PHP 8.0     | 8.0  |
-| PHP 7.4     | 7.4  |
+| PHP Version | Tags             |
+|-------------|------------------|
+| PHP 8.3     | 8.3, 8.3-nodebug |
+| PHP 8.2     | 8.2              |
+| PHP 8.1     | 8.1              |
+| PHP 8.0     | 8.0              |
+| PHP 7.4     | 7.4              |
 
-## Example useage
+By default xDebug is enabled on the images; from PHP 8.3 we have tags with the `-nodebug` suffix that
+have xDebug turned off on them.
 
-The following command will expose the current working directory on port 8080:
+## Example usage
+
+The following command will expose the current working directory on port 8080, running the image
+generated from this branch:
 
 ```shell
-docker run --name web0 -p 8080:80  -v $PWD:/var/www/html uonlearningtech/examsys-php-apache:latest
+docker run --name web0 -p 8080:80  -v $PWD:/var/www/html uonlearningtech/examsys-php-apache:8.3
 ```
 
 ## Features
